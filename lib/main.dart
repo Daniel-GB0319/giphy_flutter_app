@@ -1,61 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:giphy_picker/giphy_picker.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => GifModel(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Giphy Picker Demo',
-      home: MyHomePage(title: 'Giphy Picker Demo'),
+    return MaterialApp(
+      title: 'Giphy Picker con Provider',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        appBarTheme: AppBarTheme(
+          centerTitle: true,
+          color: Colors.blueGrey,
+        ),
+      ),
+      home: MyHomePage(title: 'Giphy Picker con Provider'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class MyHomePage extends StatelessWidget {
+  const MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  GiphyGif? _gif;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_gif?.title ?? 'Giphy Picker Demo'),
+        title: Text(title),
       ),
       body: SafeArea(
         child: Center(
-          child: _gif == null
-              ? const Text('Pick a gif..')
-              : GiphyImage.original(gif: _gif!),
+          child: context.watch<GifModel>().gif == null
+              ? const Text('Pulsa el ícono de búsqueda para visualizar los gif.')
+              : GiphyImage.original(gif: context.watch<GifModel>().gif!),
         ),
       ),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.search),
         onPressed: () async {
-          // request your Giphy API key at https://developers.giphy.com/
           final gif = await GiphyPicker.pickGif(
             context: context,
-            // YOUR GIPHY APIKEY HERE
-            apiKey: '',
+            apiKey: 'BIHdnJeNPVDOP1t6TQXX66vMa7kJ92qd',
           );
 
           if (gif != null) {
-            setState(() => _gif = gif);
+            context.read<GifModel>().updateGif(gif);
           }
         },
       ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          'By Daniel Gonzalez B.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
     );
+  }
+}
+
+class GifModel extends ChangeNotifier {
+  GiphyGif? _gif;
+
+  GiphyGif? get gif => _gif;
+
+  void updateGif(GiphyGif newGif) {
+    _gif = newGif;
+    notifyListeners();
   }
 }
